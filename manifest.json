@@ -1,0 +1,697 @@
+{
+  "sitemap": {
+    "fileOptions": {
+      "api/*": {
+        "changefreq": "daily"
+      }
+    },
+    "baseUrl": "https://project-plateau.github.io/PLATEAU-Builder/",
+    "changefreq": "weekly"
+  },
+  "homepages": [],
+  "source_base_path": "D:/a/PLATEAU-Builder-release/PLATEAU-Builder-release/Documentation",
+  "xrefmap": "xrefmap.yml",
+  "files": [
+    {
+      "type": "Resource",
+      "output": {
+        "resource": {
+          "relative_path": "index.json"
+        }
+      },
+      "is_incremental": false
+    },
+    {
+      "log_codes": [
+        "InvalidYamlHeader"
+      ],
+      "type": "Conceptual",
+      "source_relative_path": "index.md",
+      "output": {
+        ".html": {
+          "relative_path": "index.html",
+          "hash": "9wwYNo3oEa3XCPUGgjnDSVJqVDIeV3GrSxtlI4t8YH8="
+        }
+      },
+      "is_incremental": false,
+      "version": ""
+    },
+    {
+      "type": "Conceptual",
+      "source_relative_path": "manual/Build.md",
+      "output": {
+        ".html": {
+          "relative_path": "manual/Build.html",
+          "hash": "oIQxNaSowU+oktlR9w9RNCDBCJPKkQD+6EsP6tKCgHQ="
+        }
+      },
+      "is_incremental": false,
+      "version": ""
+    },
+    {
+      "log_codes": [
+        "InvalidYamlHeader"
+      ],
+      "type": "Conceptual",
+      "source_relative_path": "manual/EditAttribute.md",
+      "output": {
+        ".html": {
+          "relative_path": "manual/EditAttribute.html",
+          "hash": "GuSXfUJ0GPiIepDSSYwyT2yq14zy7Sp5R5JxSXu+T8w="
+        }
+      },
+      "is_incremental": false,
+      "version": ""
+    },
+    {
+      "log_codes": [
+        "InvalidYamlHeader"
+      ],
+      "type": "Conceptual",
+      "source_relative_path": "manual/EditGeometry.md",
+      "output": {
+        ".html": {
+          "relative_path": "manual/EditGeometry.html",
+          "hash": "oMPiRvEnzOtnerq/prGT5A10b6VPdroxiHcMmJz2WvA="
+        }
+      },
+      "is_incremental": false,
+      "version": ""
+    },
+    {
+      "log_codes": [
+        "InvalidYamlHeader"
+      ],
+      "type": "Conceptual",
+      "source_relative_path": "manual/ExportDataset.md",
+      "output": {
+        ".html": {
+          "relative_path": "manual/ExportDataset.html",
+          "hash": "hzHA6VJfV/bvueFYiYQm8jZLbo66izdLXrO2VLcs/kE="
+        }
+      },
+      "is_incremental": false,
+      "version": ""
+    },
+    {
+      "log_codes": [
+        "InvalidYamlHeader"
+      ],
+      "type": "Conceptual",
+      "source_relative_path": "manual/FilterFeature.md",
+      "output": {
+        ".html": {
+          "relative_path": "manual/FilterFeature.html",
+          "hash": "fKGwMhpG/GpHkNIVNMsEn6FSVN/mmwkfzR1IeWgkFNo="
+        }
+      },
+      "is_incremental": false,
+      "version": ""
+    },
+    {
+      "log_codes": [
+        "InvalidYamlHeader"
+      ],
+      "type": "Conceptual",
+      "source_relative_path": "manual/QuickStart.md",
+      "output": {
+        ".html": {
+          "relative_path": "manual/QuickStart.html",
+          "hash": "fhn+9DnTfkYcgqk2y+3ujroEG3g0J3Z+TQNBdPs8zpc="
+        }
+      },
+      "is_incremental": false,
+      "version": ""
+    },
+    {
+      "log_codes": [
+        "InvalidYamlHeader"
+      ],
+      "type": "Conceptual",
+      "source_relative_path": "manual/SupportedEnvironment.md",
+      "output": {
+        ".html": {
+          "relative_path": "manual/SupportedEnvironment.html",
+          "hash": "GzYmLnji86rWMjJgyx1SQCNz3H0Iq8UPn+mlWVV5Ap8="
+        }
+      },
+      "is_incremental": false,
+      "version": ""
+    },
+    {
+      "log_codes": [
+        "InvalidYamlHeader"
+      ],
+      "type": "Conceptual",
+      "source_relative_path": "manual/Validate.md",
+      "output": {
+        ".html": {
+          "relative_path": "manual/Validate.html",
+          "hash": "UxLaw7fZwkCTVrxzkeRiRFeq30Jbt958LeA+oD48MRI="
+        }
+      },
+      "is_incremental": false,
+      "version": ""
+    },
+    {
+      "log_codes": [
+        "InvalidYamlHeader"
+      ],
+      "type": "Conceptual",
+      "source_relative_path": "manual/VisualizeBasemap.md",
+      "output": {
+        ".html": {
+          "relative_path": "manual/VisualizeBasemap.html",
+          "hash": "EsxWctUSH0Lkuz2WiC0uA6aopgEiLqZ32bUAHtNj6WU="
+        }
+      },
+      "is_incremental": false,
+      "version": ""
+    },
+    {
+      "type": "Toc",
+      "source_relative_path": "manual/toc.yml",
+      "output": {
+        ".html": {
+          "relative_path": "manual/toc.html",
+          "hash": "RHtCy8rbs2h3NEBZ849+7kSO8wxipeMauSm+8CYdz/4="
+        }
+      },
+      "is_incremental": false,
+      "version": ""
+    },
+    {
+      "type": "Resource",
+      "source_relative_path": "resources/HowToUse/3d_export.png",
+      "output": {
+        "resource": {
+          "relative_path": "resources/HowToUse/3d_export.png"
+        }
+      },
+      "is_incremental": false,
+      "version": ""
+    },
+    {
+      "type": "Resource",
+      "source_relative_path": "resources/HowToUse/3d_import.png",
+      "output": {
+        "resource": {
+          "relative_path": "resources/HowToUse/3d_import.png"
+        }
+      },
+      "is_incremental": false,
+      "version": ""
+    },
+    {
+      "type": "Resource",
+      "source_relative_path": "resources/HowToUse/attribute_add.png",
+      "output": {
+        "resource": {
+          "relative_path": "resources/HowToUse/attribute_add.png"
+        }
+      },
+      "is_incremental": false,
+      "version": ""
+    },
+    {
+      "type": "Resource",
+      "source_relative_path": "resources/HowToUse/attribute_add2.png",
+      "output": {
+        "resource": {
+          "relative_path": "resources/HowToUse/attribute_add2.png"
+        }
+      },
+      "is_incremental": false,
+      "version": ""
+    },
+    {
+      "type": "Resource",
+      "source_relative_path": "resources/HowToUse/attribute_context_menu.png",
+      "output": {
+        "resource": {
+          "relative_path": "resources/HowToUse/attribute_context_menu.png"
+        }
+      },
+      "is_incremental": false,
+      "version": ""
+    },
+    {
+      "type": "Resource",
+      "source_relative_path": "resources/HowToUse/attribute_edit_code.png",
+      "output": {
+        "resource": {
+          "relative_path": "resources/HowToUse/attribute_edit_code.png"
+        }
+      },
+      "is_incremental": false,
+      "version": ""
+    },
+    {
+      "type": "Resource",
+      "source_relative_path": "resources/HowToUse/attribute_edit_code2.png",
+      "output": {
+        "resource": {
+          "relative_path": "resources/HowToUse/attribute_edit_code2.png"
+        }
+      },
+      "is_incremental": false,
+      "version": ""
+    },
+    {
+      "type": "Resource",
+      "source_relative_path": "resources/HowToUse/attribute_edit_code3.png",
+      "output": {
+        "resource": {
+          "relative_path": "resources/HowToUse/attribute_edit_code3.png"
+        }
+      },
+      "is_incremental": false,
+      "version": ""
+    },
+    {
+      "type": "Resource",
+      "source_relative_path": "resources/HowToUse/attribute_edit_uom.png",
+      "output": {
+        "resource": {
+          "relative_path": "resources/HowToUse/attribute_edit_uom.png"
+        }
+      },
+      "is_incremental": false,
+      "version": ""
+    },
+    {
+      "type": "Resource",
+      "source_relative_path": "resources/HowToUse/basemap.png",
+      "output": {
+        "resource": {
+          "relative_path": "resources/HowToUse/basemap.png"
+        }
+      },
+      "is_incremental": false,
+      "version": ""
+    },
+    {
+      "type": "Resource",
+      "source_relative_path": "resources/HowToUse/basemap_settings.png",
+      "output": {
+        "resource": {
+          "relative_path": "resources/HowToUse/basemap_settings.png"
+        }
+      },
+      "is_incremental": false,
+      "version": ""
+    },
+    {
+      "type": "Resource",
+      "source_relative_path": "resources/HowToUse/citygml_export.png",
+      "output": {
+        "resource": {
+          "relative_path": "resources/HowToUse/citygml_export.png"
+        }
+      },
+      "is_incremental": false,
+      "version": ""
+    },
+    {
+      "type": "Resource",
+      "source_relative_path": "resources/HowToUse/citygml_export①.png",
+      "output": {
+        "resource": {
+          "relative_path": "resources/HowToUse/citygml_export①.png"
+        }
+      },
+      "is_incremental": false,
+      "version": ""
+    },
+    {
+      "type": "Resource",
+      "source_relative_path": "resources/HowToUse/citygml_export②.png",
+      "output": {
+        "resource": {
+          "relative_path": "resources/HowToUse/citygml_export②.png"
+        }
+      },
+      "is_incremental": false,
+      "version": ""
+    },
+    {
+      "type": "Resource",
+      "source_relative_path": "resources/HowToUse/citygml_import.png",
+      "output": {
+        "resource": {
+          "relative_path": "resources/HowToUse/citygml_import.png"
+        }
+      },
+      "is_incremental": false,
+      "version": ""
+    },
+    {
+      "type": "Resource",
+      "source_relative_path": "resources/HowToUse/citygml_import②.png",
+      "output": {
+        "resource": {
+          "relative_path": "resources/HowToUse/citygml_import②.png"
+        }
+      },
+      "is_incremental": false,
+      "version": ""
+    },
+    {
+      "type": "Resource",
+      "source_relative_path": "resources/HowToUse/csv_export1.png",
+      "output": {
+        "resource": {
+          "relative_path": "resources/HowToUse/csv_export1.png"
+        }
+      },
+      "is_incremental": false,
+      "version": ""
+    },
+    {
+      "type": "Resource",
+      "source_relative_path": "resources/HowToUse/csv_export2.png",
+      "output": {
+        "resource": {
+          "relative_path": "resources/HowToUse/csv_export2.png"
+        }
+      },
+      "is_incremental": false,
+      "version": ""
+    },
+    {
+      "type": "Resource",
+      "source_relative_path": "resources/HowToUse/csv_import1.png",
+      "output": {
+        "resource": {
+          "relative_path": "resources/HowToUse/csv_import1.png"
+        }
+      },
+      "is_incremental": false,
+      "version": ""
+    },
+    {
+      "type": "Resource",
+      "source_relative_path": "resources/HowToUse/csv_import2.png",
+      "output": {
+        "resource": {
+          "relative_path": "resources/HowToUse/csv_import2.png"
+        }
+      },
+      "is_incremental": false,
+      "version": ""
+    },
+    {
+      "type": "Resource",
+      "source_relative_path": "resources/HowToUse/feature_info.png",
+      "output": {
+        "resource": {
+          "relative_path": "resources/HowToUse/feature_info.png"
+        }
+      },
+      "is_incremental": false,
+      "version": ""
+    },
+    {
+      "type": "Resource",
+      "source_relative_path": "resources/HowToUse/feature_opening_edit.png",
+      "output": {
+        "resource": {
+          "relative_path": "resources/HowToUse/feature_opening_edit.png"
+        }
+      },
+      "is_incremental": false,
+      "version": ""
+    },
+    {
+      "type": "Resource",
+      "source_relative_path": "resources/HowToUse/feature_opening_select.png",
+      "output": {
+        "resource": {
+          "relative_path": "resources/HowToUse/feature_opening_select.png"
+        }
+      },
+      "is_incremental": false,
+      "version": ""
+    },
+    {
+      "type": "Resource",
+      "source_relative_path": "resources/HowToUse/feature_polygon_edit.png",
+      "output": {
+        "resource": {
+          "relative_path": "resources/HowToUse/feature_polygon_edit.png"
+        }
+      },
+      "is_incremental": false,
+      "version": ""
+    },
+    {
+      "type": "Resource",
+      "source_relative_path": "resources/HowToUse/feature_polygon_edit_select.png",
+      "output": {
+        "resource": {
+          "relative_path": "resources/HowToUse/feature_polygon_edit_select.png"
+        }
+      },
+      "is_incremental": false,
+      "version": ""
+    },
+    {
+      "type": "Resource",
+      "source_relative_path": "resources/HowToUse/feature_type_edit.png",
+      "output": {
+        "resource": {
+          "relative_path": "resources/HowToUse/feature_type_edit.png"
+        }
+      },
+      "is_incremental": false,
+      "version": ""
+    },
+    {
+      "type": "Resource",
+      "source_relative_path": "resources/HowToUse/filter.png",
+      "output": {
+        "resource": {
+          "relative_path": "resources/HowToUse/filter.png"
+        }
+      },
+      "is_incremental": false,
+      "version": ""
+    },
+    {
+      "type": "Resource",
+      "source_relative_path": "resources/HowToUse/hierarchy_context.png",
+      "output": {
+        "resource": {
+          "relative_path": "resources/HowToUse/hierarchy_context.png"
+        }
+      },
+      "is_incremental": false,
+      "version": ""
+    },
+    {
+      "type": "Resource",
+      "source_relative_path": "resources/HowToUse/panel.png",
+      "output": {
+        "resource": {
+          "relative_path": "resources/HowToUse/panel.png"
+        }
+      },
+      "is_incremental": false,
+      "version": ""
+    },
+    {
+      "type": "Resource",
+      "source_relative_path": "resources/HowToUse/panel①.png",
+      "output": {
+        "resource": {
+          "relative_path": "resources/HowToUse/panel①.png"
+        }
+      },
+      "is_incremental": false,
+      "version": ""
+    },
+    {
+      "type": "Resource",
+      "source_relative_path": "resources/HowToUse/panel②.png",
+      "output": {
+        "resource": {
+          "relative_path": "resources/HowToUse/panel②.png"
+        }
+      },
+      "is_incremental": false,
+      "version": ""
+    },
+    {
+      "type": "Resource",
+      "source_relative_path": "resources/HowToUse/panel③.png",
+      "output": {
+        "resource": {
+          "relative_path": "resources/HowToUse/panel③.png"
+        }
+      },
+      "is_incremental": false,
+      "version": ""
+    },
+    {
+      "type": "Resource",
+      "source_relative_path": "resources/HowToUse/panel④.png",
+      "output": {
+        "resource": {
+          "relative_path": "resources/HowToUse/panel④.png"
+        }
+      },
+      "is_incremental": false,
+      "version": ""
+    },
+    {
+      "type": "Resource",
+      "source_relative_path": "resources/HowToUse/panel⑤.png",
+      "output": {
+        "resource": {
+          "relative_path": "resources/HowToUse/panel⑤.png"
+        }
+      },
+      "is_incremental": false,
+      "version": ""
+    },
+    {
+      "type": "Resource",
+      "source_relative_path": "resources/HowToUse/surface_type_edit.png",
+      "output": {
+        "resource": {
+          "relative_path": "resources/HowToUse/surface_type_edit.png"
+        }
+      },
+      "is_incremental": false,
+      "version": ""
+    },
+    {
+      "type": "Resource",
+      "source_relative_path": "resources/HowToUse/surface_view_mode.png",
+      "output": {
+        "resource": {
+          "relative_path": "resources/HowToUse/surface_view_mode.png"
+        }
+      },
+      "is_incremental": false,
+      "version": ""
+    },
+    {
+      "type": "Resource",
+      "source_relative_path": "resources/HowToUse/top.png",
+      "output": {
+        "resource": {
+          "relative_path": "resources/HowToUse/top.png"
+        }
+      },
+      "is_incremental": false,
+      "version": ""
+    },
+    {
+      "type": "Resource",
+      "source_relative_path": "resources/HowToUse/top_normal.png",
+      "output": {
+        "resource": {
+          "relative_path": "resources/HowToUse/top_normal.png"
+        }
+      },
+      "is_incremental": false,
+      "version": ""
+    },
+    {
+      "type": "Resource",
+      "source_relative_path": "resources/HowToUse/validation_1.png",
+      "output": {
+        "resource": {
+          "relative_path": "resources/HowToUse/validation_1.png"
+        }
+      },
+      "is_incremental": false,
+      "version": ""
+    },
+    {
+      "type": "Resource",
+      "source_relative_path": "resources/HowToUse/validation_2.png",
+      "output": {
+        "resource": {
+          "relative_path": "resources/HowToUse/validation_2.png"
+        }
+      },
+      "is_incremental": false,
+      "version": ""
+    },
+    {
+      "type": "Resource",
+      "source_relative_path": "resources/Index/index.png",
+      "output": {
+        "resource": {
+          "relative_path": "resources/Index/index.png"
+        }
+      },
+      "is_incremental": false,
+      "version": ""
+    },
+    {
+      "type": "Toc",
+      "source_relative_path": "toc.yml",
+      "output": {
+        ".html": {
+          "relative_path": "toc.html",
+          "hash": "06uiBuftZaXpQ8azBe5iXhY37/sextPwNZwV63tkIxk="
+        }
+      },
+      "is_incremental": false,
+      "version": ""
+    }
+  ],
+  "incremental_info": [
+    {
+      "status": {
+        "can_incremental": false,
+        "details": "Cannot build incrementally because last build info is missing.",
+        "incrementalPhase": "build",
+        "total_file_count": 0,
+        "skipped_file_count": 0,
+        "full_build_reason_code": "NoAvailableBuildCache"
+      },
+      "processors": {
+        "ConceptualDocumentProcessor": {
+          "can_incremental": false,
+          "incrementalPhase": "build",
+          "total_file_count": 10,
+          "skipped_file_count": 0
+        },
+        "ResourceDocumentProcessor": {
+          "can_incremental": false,
+          "details": "Processor ResourceDocumentProcessor cannot support incremental build because the processor doesn't implement ISupportIncrementalDocumentProcessor interface.",
+          "incrementalPhase": "build",
+          "total_file_count": 0,
+          "skipped_file_count": 0
+        },
+        "TocDocumentProcessor": {
+          "can_incremental": false,
+          "details": "Processor TocDocumentProcessor cannot support incremental build because the processor doesn't implement ISupportIncrementalDocumentProcessor interface.",
+          "incrementalPhase": "build",
+          "total_file_count": 0,
+          "skipped_file_count": 0
+        }
+      }
+    },
+    {
+      "status": {
+        "can_incremental": false,
+        "details": "Cannot support incremental post processing, the reason is: should not trace intermediate info.",
+        "incrementalPhase": "postProcessing",
+        "total_file_count": 0,
+        "skipped_file_count": 0
+      },
+      "processors": {}
+    }
+  ],
+  "version_info": {},
+  "groups": [
+    {
+      "xrefmap": "xrefmap.yml"
+    }
+  ]
+}
