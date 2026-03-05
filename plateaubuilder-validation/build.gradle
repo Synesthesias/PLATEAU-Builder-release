@@ -6,7 +6,18 @@ plugins {
     id 'org.beryx.jlink' version '2.25.0'
     id 'edu.sc.seis.launch4j' version '2.4.9'
 }
+def gdalInstallDir = findProperty("gdalInstallDir") ?: "C:/Program Files/GDAL"
+def gdalJavaDir = "${gdalInstallDir}/bin/gdal/java"
+def gdalBinDir  = "${gdalInstallDir}/bin"
 
+tasks.named("run") {
+    jvmArgs "-Djava.library.path=${gdalJavaDir}"
+    environment "PATH", "${gdalBinDir};" + System.getenv("PATH")
+
+    environment "PROJ_LIB", "${gdalBinDir}/proj9/share"
+
+    environment "GDAL_DATA", "${gdalInstallDir}/gdal-data"
+}
 dependencies {
     implementation project(':plateaubuilder-core')
 
@@ -33,4 +44,9 @@ dependencies {
     testImplementation 'junit:junit:4.13.1'
     testImplementation 'org.junit.jupiter:junit-jupiter:5.8.1'
     implementation 'commons-io:commons-io:2.15.1'
+}
+
+application {
+    mainClass = "org.plateaubuilder.validation.ValidationCli"
+    mainModule = "plateaubuilder.validation"
 }

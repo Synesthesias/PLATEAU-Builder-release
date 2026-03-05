@@ -8,4 +8,5 @@ module plateaubuilder.validation {
     requires org.apache.commons.lang3;
     requires org.locationtech.jts;
     requires org.apache.commons.io;
+    requires com.fasterxml.jackson.databind;
 }

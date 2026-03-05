@@ -62,4 +62,46 @@ public class GmlImporter {
 
         return cityModelView;
     }
+
+    public static CityModelView loadGmlHeadless(String fileUrl, String epsgCode) throws Exception {
+        final int dot = fileUrl.lastIndexOf('.');
+        if (dot <= 0) {
+            throw new IOException("Unknown format, url missing extension [" + fileUrl + "]");
+        }
+
+        CityGMLContext context = CityGMLContext.getInstance();
+
+        if (!context.hasADEContexts())
+            context.registerADEContext(new UrbanRevitalizationADEContext());
+
+        CityGMLBuilder builder = context.createCityGMLBuilder();
+        CityGMLInputFactory in = builder.createCityGMLInputFactory();
+        CityGMLReader reader = in.createCityGMLReader(new File(fileUrl));
+
+        CityModelView cityModelView = null;
+
+        while (reader.hasNext()) {
+            CityGML citygml = reader.nextFeature();
+            if (citygml.getCityGMLClass() != CityGMLClass.CITY_MODEL)
+                continue;
+
+            var world = World.getActiveInstance();
+            if (world != null && world.getGeoReference() == null) {
+                var envelope = ((CityModel) citygml).getBoundedBy().getEnvelope();
+                var lowerCorner = envelope.getLowerCorner().toList3d();
+                var min = new GeoCoordinate(lowerCorner);
+                var upperCorner = envelope.getUpperCorner().toList3d();
+                var max = new GeoCoordinate(upperCorner);
+                var center = min.add(max).divide(2);
+                center.alt = 0;
+                world.setGeoReference(new GeoReference(center, epsgCode));
+            }
+
+            cityModelView = new CityModelView((CityModel) citygml, in.getSchemaHandler());
+            cityModelView.setGmlPath(fileUrl);
+        }
+        reader.close();
+
+        return cityModelView;
+    }
 }

@@ -1,0 +1,318 @@
+package org.plateaubuilder.validation;
+
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import javafx.application.Platform;
+import org.plateaubuilder.core.io.gml.GmlImporter;
+import javafx.scene.Group;
+import org.plateaubuilder.core.world.World;
+import java.io.BufferedWriter;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStreamWriter;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Locale;
+import java.util.Set;
+import java.util.function.Supplier;
+import java.util.regex.Pattern;
+
+import static org.plateaubuilder.validation.constant.StandardID.C01;
+import static org.plateaubuilder.validation.constant.StandardID.C04;
+import static org.plateaubuilder.validation.constant.StandardID.C_BLDG_01;
+import static org.plateaubuilder.validation.constant.StandardID.L04;
+import static org.plateaubuilder.validation.constant.StandardID.L05;
+import static org.plateaubuilder.validation.constant.StandardID.L06;
+import static org.plateaubuilder.validation.constant.StandardID.L07;
+import static org.plateaubuilder.validation.constant.StandardID.L08;
+import static org.plateaubuilder.validation.constant.StandardID.L09;
+import static org.plateaubuilder.validation.constant.StandardID.L10;
+import static org.plateaubuilder.validation.constant.StandardID.L11;
+import static org.plateaubuilder.validation.constant.StandardID.L12;
+import static org.plateaubuilder.validation.constant.StandardID.L13;
+import static org.plateaubuilder.validation.constant.StandardID.L_BLDG_02;
+import static org.plateaubuilder.validation.constant.StandardID.T03;
+import static org.plateaubuilder.validation.constant.StandardID.T_BLDG_02;
+
+public class ValidationCli {
+    private static final Pattern EPSG_PATTERN = Pattern.compile("^EPSG:\\d+$", Pattern.CASE_INSENSITIVE);
+    private static final String MODE_PR = "pr";
+    private static final String MODE_FULL = "full";
+    private static final DateTimeFormatter LOG_TIME_FORMATTER = DateTimeFormatter.ofPattern("yyyyMMdd-HHmmss");
+    private static final String SCHEMA_RELATIVE_PATH = "schemas/iur/uro/3.1/urbanObject.xsd";
+    private static final String PARAM_RESOURCE_PATH = "/org/plateaubuilder/validation/validation-params.json";
+
+    private static final Set<String> PR_ALLOWLIST = Set.of(
+            C01, C04,
+            L04, L05,
+            L06, L07,
+            L08, L09, L10, L11, L12, L13,
+            L_BLDG_02,
+            T03,
+            T_BLDG_02
+    );
+
+    private static final Set<String> FULL_ALLOWLIST;
+
+    static {
+        Set<String> full = new HashSet<>(PR_ALLOWLIST);
+        full.add(C_BLDG_01);
+        FULL_ALLOWLIST = Set.copyOf(full);
+    }
+
+    public static void main(String[] args) {
+        try {
+            CliArgs cliArgs = parseArgs(args);
+            initializeJavaFxHeadless();
+
+            Path inputPath = Paths.get(cliArgs.inputPath).toAbsolutePath().normalize();
+            if (!Files.exists(inputPath) || !Files.isRegularFile(inputPath)) {
+                fail("Input GML not found: " + inputPath);
+                return;
+            }
+
+            Path datasetRoot = findDatasetRoot(inputPath);
+            if (datasetRoot == null) {
+                fail("Schema file not found while searching upward from input: " + SCHEMA_RELATIVE_PATH);
+                return;
+            }
+
+            Path logDir = datasetRoot.resolve(AppConst.VALIDATION_LOG_DESTINATION_DIRECTORY);
+
+            World.setActiveInstance(new World(), new Group()); // Non-obvious: ThreeDUtil.distance() relies on World.getActiveInstance()
+            var cityModelView = GmlImporter.loadGmlHeadless(inputPath.toString(), cliArgs.epsg);
+            if (cityModelView == null) {
+                fail("Failed to load CityModel from input: " + inputPath);
+                return;
+            }
+
+            List<IValidator> validators = loadValidatorsForMode(cliArgs.mode);
+            if (validators.isEmpty()) {
+                System.out.println("No validators selected for mode: " + cliArgs.mode);
+            } else {
+                System.out.println("Validators to run (" + validators.size() + "):");
+                for (IValidator validator : validators) {
+                    System.out.println(" - " + validator.getClass().getSimpleName());
+                }
+            }
+
+            List<ValidationResultMessage> allMessages = new ArrayList<>();
+            int errorCount = 0;
+            int warningCount = 0;
+
+            for (IValidator validator : validators) {
+                String validatorName = validator.getClass().getSimpleName();
+                try {
+                    List<ValidationResultMessage> messages = validator.validate(cityModelView);
+                    for (ValidationResultMessage message : messages) {
+                        if (message.getType() == ValidationResultMessageType.Error) {
+                            errorCount++;
+                        } else if (message.getType() == ValidationResultMessageType.Warning) {
+                            warningCount++;
+                        }
+                    }
+                    allMessages.addAll(messages);
+                } catch (Exception ex) {
+                    String crashMessage = validatorName + " crashed: " + ex.getClass().getSimpleName() + ": " + ex.getMessage();
+                    ValidationResultMessage synthetic = new ValidationResultMessage(
+                            ValidationResultMessageType.Error,
+                            crashMessage
+                    );
+                    errorCount++;
+                    allMessages.add(synthetic);
+                    System.err.println(crashMessage);
+                }
+            }
+
+            Path logFile = writeValidationLog(logDir, inputPath, cliArgs.epsg, cliArgs.mode, errorCount, warningCount, allMessages);
+            System.out.println("Validation completed. errors=" + errorCount + ", warnings=" + warningCount);
+            System.out.println("Log file: " + logFile.toAbsolutePath());
+            System.exit(0);
+        } catch (IllegalArgumentException e) {
+            fail(e.getMessage());
+        } catch (Exception e) {
+            fail("Unexpected error: " + e.getClass().getSimpleName() + ": " + e.getMessage());
+        }
+    }
+
+    private static void initializeJavaFxHeadless() {
+        System.setProperty("prism.order", "sw");
+        try {
+            Platform.startup(() -> {
+            });
+        } catch (IllegalStateException ignored) {
+        }
+    }
+
+    private static CliArgs parseArgs(String[] args) {
+        if (args == null || args.length == 0) {
+            throw new IllegalArgumentException(
+                    "Usage: :plateaubuilder-validation:run --args=\"<gml-path> [EPSG:xxxx] [--mode=pr|full]\""
+            );
+        }
+
+        String inputPath = args[0];
+        String epsg = "EPSG:6677";
+        String mode = MODE_FULL;
+
+        for (String token : Arrays.asList(args).subList(1, args.length)) {
+            if (EPSG_PATTERN.matcher(token).matches()) {
+                epsg = token.toUpperCase(Locale.ROOT);
+            } else if (token.startsWith("--mode=")) {
+                mode = token.substring("--mode=".length()).toLowerCase(Locale.ROOT);
+            }
+        }
+
+        if (!MODE_PR.equals(mode) && !MODE_FULL.equals(mode)) {
+            throw new IllegalArgumentException("Invalid mode: " + mode + " (expected pr or full)");
+        }
+
+        return new CliArgs(inputPath, epsg, mode);
+    }
+
+    private static Path findDatasetRoot(Path inputPath) {
+        Path current = inputPath.toAbsolutePath().normalize().getParent();
+        while (current != null) {
+            Path schemaPath = current.resolve(SCHEMA_RELATIVE_PATH);
+            if (Files.exists(schemaPath) && Files.isRegularFile(schemaPath)) {
+                return current;
+            }
+            current = current.getParent();
+        }
+        return null;
+    }
+
+    private static List<IValidator> loadValidatorsForMode(String mode) throws IOException {
+        Set<String> allowlist = MODE_PR.equals(mode) ? PR_ALLOWLIST : FULL_ALLOWLIST;
+
+        List<Standard> standards = readValidationParams();
+        List<IValidator> validators = new ArrayList<>();
+        for (Standard standard : standards) {
+            String id = standard.getId();
+            if (!standard.isEnabled()) {
+                continue;
+            }
+            Supplier<IValidator> supplier = createValidatorSupplier(id);
+            if (supplier == null) {
+                System.out.println("WARN: Unsupported validator id in " + AppConst.VALIDATION_PARAM_FILE_NAME + ": " + id + " (skipped)");
+                continue;
+            }
+            if (!allowlist.contains(id)) {
+                continue;
+            }
+
+            validators.add(supplier.get());
+        }
+
+        return validators;
+    }
+
+    private static List<Standard> readValidationParams() throws IOException {
+        ObjectMapper mapper = new ObjectMapper();
+        try (InputStream input = ValidationCli.class.getResourceAsStream(PARAM_RESOURCE_PATH)) {
+            if (input == null) {
+                throw new IOException("Validation params resource not found: " + PARAM_RESOURCE_PATH);
+            }
+            return mapper.readValue(input, new TypeReference<List<Standard>>() {
+            });
+        }
+    }
+
+    private static Supplier<IValidator> createValidatorSupplier(String id) {
+        switch (id) {
+            case C01:
+                return GMLIDCompletenessValidator::new;
+            case C04:
+                return C04CompletenessValidator::new;
+            case L04:
+                return L04LogicalConsistencyValidator::new;
+            case L05:
+                return L05LogicalConsistencyValidator::new;
+            case L06:
+                return L06LogicalConsistencyValidator::new;
+            case L07:
+                return L07LogicalConsistencyValidator::new;
+            case L08:
+                return L08LogicalConsistencyValidator::new;
+            case L09:
+                return L09LogicalConsistencyValidator::new;
+            case L10:
+                return L10LogicalConsistencyValidator::new;
+            case L11:
+                return L11LogicalConsistencyValidator::new;
+            case L12:
+                return L12LogicalConsistencyValidator::new;
+            case L13:
+                return L13LogicalConsistencyValidator::new;
+            case L_BLDG_02:
+                return Lbldg02LogicalConsistencyValidator::new;
+            case T03:
+                return T03ThematicAccuaracyValidator::new;
+            case T_BLDG_02:
+                return Tbldg02ThematicAccuaracyValidator::new;
+            case C_BLDG_01:
+                return Lbldg01LogicalAccuracyValidator::new;
+            default:
+                return null;
+        }
+    }
+
+    private static Path writeValidationLog(
+            Path logDir,
+            Path inputPath,
+            String epsg,
+            String mode,
+            int errorCount,
+            int warningCount,
+            List<ValidationResultMessage> messages
+    ) throws IOException {
+        Files.createDirectories(logDir);
+        String fileName = "validation-" + LOG_TIME_FORMATTER.format(LocalDateTime.now()) + ".log";
+        Path logPath = logDir.resolve(fileName);
+
+        try (BufferedWriter writer = new BufferedWriter(
+                new OutputStreamWriter(Files.newOutputStream(logPath), StandardCharsets.UTF_8))) {
+            writer.write("input=" + inputPath);
+            writer.newLine();
+            writer.write("epsg=" + epsg);
+            writer.newLine();
+            writer.write("mode=" + mode);
+            writer.newLine();
+            writer.write("errors=" + errorCount + ",warnings=" + warningCount);
+            writer.newLine();
+            writer.newLine();
+
+            for (ValidationResultMessage message : messages) {
+                writer.write("[" + message.getType() + "] " + message.getMessage());
+                writer.newLine();
+            }
+        }
+
+        return logPath;
+    }
+
+    private static void fail(String message) {
+        System.err.println(message);
+        System.exit(1);
+    }
+
+    private static class CliArgs {
+        private final String inputPath;
+        private final String epsg;
+        private final String mode;
+
+        private CliArgs(String inputPath, String epsg, String mode) {
+            this.inputPath = inputPath;
+            this.epsg = epsg;
+            this.mode = mode;
+        }
+    }
+}

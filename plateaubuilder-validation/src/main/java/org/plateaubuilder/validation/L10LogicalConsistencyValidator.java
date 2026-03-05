@@ -4,6 +4,7 @@ import javafx.geometry.Point3D;
 import org.apache.commons.lang3.ObjectUtils;
 import org.plateaubuilder.core.citymodel.CityModelView;
 import org.plateaubuilder.core.geospatial.GeoCoordinate;
+import org.plateaubuilder.core.utils3d.geom.Vec3f;
 import org.plateaubuilder.core.utils3d.polygonmesh.FaceBuffer;
 import org.plateaubuilder.core.utils3d.polygonmesh.PolygonMeshUtils;
 import org.plateaubuilder.core.utils3d.polygonmesh.Tessellator;
@@ -136,7 +137,13 @@ public class L10LogicalConsistencyValidator implements IValidator {
     // The contour points are converted to coordinates in the world and registered. The end point is deleted because the start point and end point overlap.
     for (var point : points) {
       var geoCoordinate = new GeoCoordinate(point.getX(), point.getY(), point.getZ());
-      var position = World.getActiveInstance().getGeoReference().project(geoCoordinate);
+      var world = World.getActiveInstance();
+      Vec3f position;
+      if (world != null && world.getGeoReference() != null) {
+        position = world.getGeoReference().project(geoCoordinate);
+      } else {
+        position = new Vec3f((float) point.getX(), (float) point.getY(), (float) point.getZ());
+      }
       ringVertexBuffer.addVertex(position);
     }
 

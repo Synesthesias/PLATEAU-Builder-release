@@ -45,8 +45,13 @@ public class ThreeDUtil {
     }
 
     public static Vec3f convertGeoToCalculateDistance(Point3D point) {
-        return World.getActiveInstance().getGeoReference()
-                .project(new GeoCoordinate(point.getX(), point.getY(), point.getZ()));
+        var world = World.getActiveInstance();
+        if (world != null && world.getGeoReference() != null) {
+            return world.getGeoReference()
+                    .project(new GeoCoordinate(point.getX(), point.getY(), point.getZ()));
+        }
+
+        return new Vec3f((float) point.getX(), (float) point.getY(), (float) point.getZ());
     }
 
     public static double distance(Point3D input1, Point3D input2) {

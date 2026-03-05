@@ -14,10 +14,25 @@ public class GeoReference {
     private Vec3d origin;
     private StringProperty epsgCode = new SimpleStringProperty();
 
+    private static void setConfigIfPresent(String key, String value) {
+        if (value != null && !value.isBlank()) {
+            gdal.SetConfigOption(key, value);
+        }
+    }
     public GeoReference(GeoCoordinate origin, String epsgCode) {
         // GDALの設定
-        gdal.SetConfigOption("GDAL_DATA", "./gdal/gdal-data");
-        gdal.SetConfigOption("PROJ_LIB", "./gdal/projlib");
+        String gdalDataEnv = System.getenv("GDAL_DATA");
+        String projLibEnv  = System.getenv("PROJ_LIB");
+
+        setConfigIfPresent("GDAL_DATA", gdalDataEnv);
+        setConfigIfPresent("PROJ_LIB", projLibEnv);
+
+        if (gdalDataEnv == null || gdalDataEnv.isBlank()) {
+            setConfigIfPresent("GDAL_DATA", "./gdal/gdal-data");
+        }
+        if (projLibEnv == null || projLibEnv.isBlank()) {
+            setConfigIfPresent("PROJ_LIB", "./gdal/projlib");
+        }
         // GDALの初期化
         gdal.AllRegister();
 
