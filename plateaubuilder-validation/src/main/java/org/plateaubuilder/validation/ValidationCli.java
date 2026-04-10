@@ -115,7 +115,7 @@ public class ValidationCli {
             }
 
             Path logFile = writeValidationLog(logDir, inputPath, cliArgs.epsg, errorCount, warningCount, allMessages);
-            System.out.println("Validation completed. errors=" + errorCount + ", warnings=" + warningCount);
+            System.out.println("品質検査が完了しました。(エラー数:" + errorCount + ",警告数:" + warningCount + ")");
             System.out.println("Log file: " + logFile.toAbsolutePath());
             System.exit(0);
         } catch (IllegalArgumentException e) {
