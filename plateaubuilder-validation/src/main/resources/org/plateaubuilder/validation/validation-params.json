@@ -12,7 +12,7 @@
   {
     "id": "C-bldg-01",
     "title": "LODに指定された地物型の過剰",
-    "enabled": true
+    "enabled": false
   },
   {
     "id": "L04",
@@ -72,22 +72,22 @@
   {
     "id": "L15",
     "title": "位相一貫性(gml:Triangle)",
-    "enabled": true
+    "enabled": false
   },
   {
     "id": "L16",
     "title": "位相一貫性(gml:TriangulatedSurface)",
-    "enabled": true
+    "enabled": false
   },
   {
     "id": "L17",
     "title": "位相一貫性(gml:CompositeCurve)",
-    "enabled": true
+    "enabled": false
   },
   {
     "id": "L18",
     "title": "位相一貫性",
-    "enabled": true
+    "enabled": false
   },
   {
     "id": "L-bldg-01",
@@ -102,7 +102,7 @@
   {
     "id": "L-bldg-03",
     "title": "位相一貫性",
-    "enabled": true
+    "enabled": false
   },
   {
     "id": "T-03",
@@ -112,11 +112,6 @@
   {
     "id": "T-bldg-02",
     "title": "主題正確度・分類の正しさ(bldg:BuildingInstallationの幾何オブジェクトの型の分類の正しさ)",
-    "enabled": true
-  },
-  {
-    "id": "L14",
-    "title": "位相一貫性",
     "enabled": true
   }
 ]

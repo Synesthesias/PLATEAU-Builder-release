@@ -18,10 +18,8 @@ import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
-import java.util.Set;
 import java.util.function.Supplier;
 import java.util.regex.Pattern;
 
@@ -38,36 +36,19 @@ import static org.plateaubuilder.validation.constant.StandardID.L10;
 import static org.plateaubuilder.validation.constant.StandardID.L11;
 import static org.plateaubuilder.validation.constant.StandardID.L12;
 import static org.plateaubuilder.validation.constant.StandardID.L13;
+import static org.plateaubuilder.validation.constant.StandardID.L14;
+import static org.plateaubuilder.validation.constant.StandardID.L18;
 import static org.plateaubuilder.validation.constant.StandardID.L_BLDG_02;
+import static org.plateaubuilder.validation.constant.StandardID.L_BLDG_03;
 import static org.plateaubuilder.validation.constant.StandardID.T03;
 import static org.plateaubuilder.validation.constant.StandardID.T_BLDG_02;
 
 public class ValidationCli {
     private static final Pattern EPSG_PATTERN = Pattern.compile("^EPSG:\\d+$", Pattern.CASE_INSENSITIVE);
-    private static final String MODE_PR = "pr";
-    private static final String MODE_FULL = "full";
     private static final DateTimeFormatter LOG_TIME_FORMATTER = DateTimeFormatter.ofPattern("yyyyMMdd-HHmmss");
     private static final String SCHEMA_LANDMARK_FILENAME = "urbanObject.xsd";
     private static final String SCHEMA_LANDMARK_PARENT_DIR = "schemas/iur/uro";
     private static final String PARAM_RESOURCE_PATH = "/org/plateaubuilder/validation/validation-params.json";
-
-    private static final Set<String> PR_ALLOWLIST = Set.of(
-            C01, C04,
-            L04, L05,
-            L06, L07,
-            L08, L09, L10, L11, L12, L13,
-            L_BLDG_02,
-            T03,
-            T_BLDG_02
-    );
-
-    private static final Set<String> FULL_ALLOWLIST;
-
-    static {
-        Set<String> full = new HashSet<>(PR_ALLOWLIST);
-        full.add(C_BLDG_01);
-        FULL_ALLOWLIST = Set.copyOf(full);
-    }
 
     public static void main(String[] args) {
         try {
@@ -95,9 +76,9 @@ public class ValidationCli {
                 return;
             }
 
-            List<IValidator> validators = loadValidatorsForMode(cliArgs.mode);
+            List<IValidator> validators = loadValidators();
             if (validators.isEmpty()) {
-                System.out.println("No validators selected for mode: " + cliArgs.mode);
+                System.out.println("No validators selected.");
             } else {
                 System.out.println("Validators to run (" + validators.size() + "):");
                 for (IValidator validator : validators) {
@@ -133,7 +114,7 @@ public class ValidationCli {
                 }
             }
 
-            Path logFile = writeValidationLog(logDir, inputPath, cliArgs.epsg, cliArgs.mode, errorCount, warningCount, allMessages);
+            Path logFile = writeValidationLog(logDir, inputPath, cliArgs.epsg, errorCount, warningCount, allMessages);
             System.out.println("Validation completed. errors=" + errorCount + ", warnings=" + warningCount);
             System.out.println("Log file: " + logFile.toAbsolutePath());
             System.exit(0);
@@ -156,27 +137,20 @@ public class ValidationCli {
     private static CliArgs parseArgs(String[] args) {
         if (args == null || args.length == 0) {
             throw new IllegalArgumentException(
-                    "Usage: :plateaubuilder-validation:run --args=\"<gml-path> [EPSG:xxxx] [--mode=pr|full]\""
+                    "Usage: :plateaubuilder-validation:run --args=\"<gml-path> [EPSG:xxxx]\""
             );
         }
 
         String inputPath = args[0];
         String epsg = "EPSG:6677";
-        String mode = MODE_FULL;
 
         for (String token : Arrays.asList(args).subList(1, args.length)) {
             if (EPSG_PATTERN.matcher(token).matches()) {
                 epsg = token.toUpperCase(Locale.ROOT);
-            } else if (token.startsWith("--mode=")) {
-                mode = token.substring("--mode=".length()).toLowerCase(Locale.ROOT);
             }
         }
 
-        if (!MODE_PR.equals(mode) && !MODE_FULL.equals(mode)) {
-            throw new IllegalArgumentException("Invalid mode: " + mode + " (expected pr or full)");
-        }
-
-        return new CliArgs(inputPath, epsg, mode);
+        return new CliArgs(inputPath, epsg);
     }
 
     private static Path findDatasetRoot(Path inputPath) {
@@ -199,9 +173,7 @@ public class ValidationCli {
         return null;
     }
 
-    private static List<IValidator> loadValidatorsForMode(String mode) throws IOException {
-        Set<String> allowlist = MODE_PR.equals(mode) ? PR_ALLOWLIST : FULL_ALLOWLIST;
-
+    private static List<IValidator> loadValidators() throws IOException {
         List<Standard> standards = readValidationParams();
         List<IValidator> validators = new ArrayList<>();
         for (Standard standard : standards) {
@@ -212,9 +184,6 @@ public class ValidationCli {
             Supplier<IValidator> supplier = createValidatorSupplier(id);
             if (supplier == null) {
                 System.out.println("WARN: Unsupported validator id in " + AppConst.VALIDATION_PARAM_FILE_NAME + ": " + id + " (skipped)");
-                continue;
-            }
-            if (!allowlist.contains(id)) {
                 continue;
             }
 
@@ -261,8 +230,14 @@ public class ValidationCli {
                 return L12LogicalConsistencyValidator::new;
             case L13:
                 return L13LogicalConsistencyValidator::new;
+            case L14:
+                return L14LogicalAccuaracyValidator::new;
+            case L18:
+                return L18LogicalConsistencyValidator::new;
             case L_BLDG_02:
                 return Lbldg02LogicalConsistencyValidator::new;
+            case L_BLDG_03:
+                return Lbldg03LogicalAccuaracyValidator::new;
             case T03:
                 return T03ThematicAccuaracyValidator::new;
             case T_BLDG_02:
@@ -278,7 +253,6 @@ public class ValidationCli {
             Path logDir,
             Path inputPath,
             String epsg,
-            String mode,
             int errorCount,
             int warningCount,
             List<ValidationResultMessage> messages
@@ -292,8 +266,6 @@ public class ValidationCli {
             writer.write("input=" + inputPath);
             writer.newLine();
             writer.write("epsg=" + epsg);
-            writer.newLine();
-            writer.write("mode=" + mode);
             writer.newLine();
             writer.write("errors=" + errorCount + ",warnings=" + warningCount);
             writer.newLine();
@@ -316,12 +288,10 @@ public class ValidationCli {
     private static class CliArgs {
         private final String inputPath;
         private final String epsg;
-        private final String mode;
 
-        private CliArgs(String inputPath, String epsg, String mode) {
+        private CliArgs(String inputPath, String epsg) {
             this.inputPath = inputPath;
             this.epsg = epsg;
-            this.mode = mode;
         }
     }
 }
