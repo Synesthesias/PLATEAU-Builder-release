@@ -47,7 +47,8 @@ public class ValidationCli {
     private static final String MODE_PR = "pr";
     private static final String MODE_FULL = "full";
     private static final DateTimeFormatter LOG_TIME_FORMATTER = DateTimeFormatter.ofPattern("yyyyMMdd-HHmmss");
-    private static final String SCHEMA_RELATIVE_PATH = "schemas/iur/uro/3.1/urbanObject.xsd";
+    private static final String SCHEMA_LANDMARK_FILENAME = "urbanObject.xsd";
+    private static final String SCHEMA_LANDMARK_PARENT_DIR = "schemas/iur/uro";
     private static final String PARAM_RESOURCE_PATH = "/org/plateaubuilder/validation/validation-params.json";
 
     private static final Set<String> PR_ALLOWLIST = Set.of(
@@ -81,7 +82,7 @@ public class ValidationCli {
 
             Path datasetRoot = findDatasetRoot(inputPath);
             if (datasetRoot == null) {
-                fail("Schema file not found while searching upward from input: " + SCHEMA_RELATIVE_PATH);
+                fail("Schema file not found while searching upward from input: " + SCHEMA_LANDMARK_PARENT_DIR + "/*/" + SCHEMA_LANDMARK_FILENAME);
                 return;
             }
 
@@ -181,9 +182,17 @@ public class ValidationCli {
     private static Path findDatasetRoot(Path inputPath) {
         Path current = inputPath.toAbsolutePath().normalize().getParent();
         while (current != null) {
-            Path schemaPath = current.resolve(SCHEMA_RELATIVE_PATH);
-            if (Files.exists(schemaPath) && Files.isRegularFile(schemaPath)) {
-                return current;
+            Path uroDir = current.resolve(SCHEMA_LANDMARK_PARENT_DIR);
+            if (Files.isDirectory(uroDir)) {
+                try (var versionDirs = Files.list(uroDir)) {
+                    boolean found = versionDirs
+                            .filter(Files::isDirectory)
+                            .anyMatch(v -> Files.isRegularFile(v.resolve(SCHEMA_LANDMARK_FILENAME)));
+                    if (found) {
+                        return current;
+                    }
+                } catch (IOException ignored) {
+                }
             }
             current = current.getParent();
         }
