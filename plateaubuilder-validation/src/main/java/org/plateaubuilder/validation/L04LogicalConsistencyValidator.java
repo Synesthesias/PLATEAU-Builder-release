@@ -18,10 +18,12 @@ import java.util.Objects;
 
 public class L04LogicalConsistencyValidator implements IValidator {
     private CityModelView targetCityModelView;
-
+    private final java.util.Map<String, java.util.Set<String>> codeSpaceValuesCache = new java.util.HashMap<>();
     @Override
-    public List<ValidationResultMessage> validate(CityModelView cityModelView) throws ParserConfigurationException, IOException, SAXException {
+    public List<ValidationResultMessage> validate(CityModelView cityModelView)
+            throws ParserConfigurationException, IOException, SAXException {
         targetCityModelView = cityModelView;
+        codeSpaceValuesCache.clear();
 
         List<ValidationResultMessage> messages = new ArrayList<>();
 
@@ -74,31 +76,60 @@ public class L04LogicalConsistencyValidator implements IValidator {
 
     private boolean checkTagValid(Element tagInput) throws ParserConfigurationException, IOException, SAXException {
         String linkCodeSpace = tagInput.getAttribute(TagName.ATTRIBUTE_CODE_SPACE).trim();
-        String[] paths = linkCodeSpace.split("/");
-        StringBuilder absolutePathCodeSpace = new StringBuilder();
+        if (linkCodeSpace.isBlank()) return false;
 
-        // create absolute file CodeSpace
-        File fileImport = new File(targetCityModelView.getGmlPath()).getParentFile();
-        for (String path : paths) {
-            if (Objects.equals("..", path)) {
-                fileImport = fileImport.getParentFile();
-            } else {
-                if (absolutePathCodeSpace.length() == 0) {
-                    absolutePathCodeSpace = new StringBuilder(fileImport.toString() + "/" + path);
-                } else {
-                    absolutePathCodeSpace.append("/").append(path);
-                }
-            }
+        File codeSpaceFile = resolveCodeSpaceFile(linkCodeSpace);
+        if (codeSpaceFile == null || !codeSpaceFile.isFile()) return false;
+
+        String key = codeSpaceFile.getAbsolutePath();
+        java.util.Set<String> allowed = codeSpaceValuesCache.get(key);
+        if (allowed == null) {
+            allowed = loadCodeSpaceNames(codeSpaceFile);
+            codeSpaceValuesCache.put(key, allowed);
         }
 
         String contentInput = tagInput.getTextContent().trim();
-        File fileCodeSpace = new File(absolutePathCodeSpace.toString());
-        NodeList codeSpaces = XmlUtil.getAllTagFromXmlFile(fileCodeSpace, TagName.GML_NAME);
-        for (int i = 0; i < codeSpaces.getLength(); i++) {
-            Element codeSpace = (Element) codeSpaces.item(i);
-            String codeContenSpace = codeSpace.getTextContent().trim();
-            if (Objects.equals(codeContenSpace, contentInput)) return true;
+        return allowed.contains(contentInput);
+    }
+    private File resolveCodeSpaceFile(String linkCodeSpace) {
+        String[] paths = linkCodeSpace.split("/");
+        File base = new File(targetCityModelView.getGmlPath()).getParentFile();
+        if (base == null) return null;
+
+        File cur = base;
+        StringBuilder rel = new StringBuilder();
+
+        for (String part : paths) {
+            if (part.isEmpty() || ".".equals(part)) continue;
+
+            if ("..".equals(part)) {
+                cur = cur.getParentFile();
+                if (cur == null) return null;
+                continue;
+            }
+
+            if (rel.length() == 0) rel.append(part);
+            else rel.append("/").append(part);
         }
-        return false;
+
+        return rel.length() == 0 ? null : new File(cur, rel.toString());
+    }
+
+    private java.util.Set<String> loadCodeSpaceNames(File codeSpaceFile)
+            throws ParserConfigurationException, IOException, SAXException {
+        NodeList codeSpaces = XmlUtil.getAllTagFromXmlFile(codeSpaceFile, TagName.GML_NAME);
+        java.util.Set<String> values = new java.util.HashSet<>(Math.max(16, codeSpaces.getLength() * 2));
+
+        for (int i = 0; i < codeSpaces.getLength(); i++) {
+            Node n = codeSpaces.item(i);
+            if (n instanceof Element) {
+                String v = n.getTextContent();
+                if (v != null) {
+                    v = v.trim();
+                    if (!v.isEmpty()) values.add(v);
+                }
+            }
+        }
+        return values;
     }
 }

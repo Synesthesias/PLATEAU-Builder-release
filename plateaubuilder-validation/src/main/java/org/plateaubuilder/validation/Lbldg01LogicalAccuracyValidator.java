@@ -23,9 +23,9 @@ import java.util.stream.Collectors;
 public class Lbldg01LogicalAccuracyValidator implements IValidator {
 
   private static final String BUILDING_ID = "buildingId";
-
+  private java.util.Map<String, Node> polygonById;
   private Document rootDocument;
-
+  private final java.util.Map<Node, Geometry> projectedCache = new java.util.IdentityHashMap<>();
   interface Lbldg01ErrorType {
     int ERR_INVALID_FORMAT_POINTS = 0;
     int ERR_SOLID_INTERSECT = 1;
@@ -53,14 +53,31 @@ public class Lbldg01LogicalAccuracyValidator implements IValidator {
     }
     return solids;
   }
+  private Geometry getProjectedCached(Node solid, Set<GmlElementError> elementErrors, String lodSolidType) {
+    var cached = projectedCache.get(solid);
+    if (cached != null) return cached;
 
+    var computed = getSolidExteriorProjectedOnOxyPlane(solid, elementErrors, lodSolidType);
+    projectedCache.put(solid, computed);
+    return computed;
+  }
 
   @Override
   public List<ValidationResultMessage> validate(CityModelView cityModel)
       throws ParserConfigurationException, IOException, SAXException {
     this.rootDocument = CityGmlUtil.getXmlDocumentFrom(cityModel);
-    List<Node> buildings = XmlUtil.findAllNodeByTag(this.rootDocument, TagName.BLDG_BUILDING);
+    projectedCache.clear();
+    this.polygonById = new java.util.HashMap<>();
+    var polygonNodes = this.rootDocument.getElementsByTagName(TagName.GML_POLYGON);
+    for (int i = 0; i < polygonNodes.getLength(); i++) {
+      var n = polygonNodes.item(i);
+      var id = XmlUtil.getAttribute(n, TagName.GML_ID);
+      if (id != null && !id.isBlank()) {
+        polygonById.putIfAbsent(id, n);
+      }
+    }
 
+    List<Node> buildings = XmlUtil.findAllNodeByTag(this.rootDocument, TagName.BLDG_BUILDING);
 
     List<ValidationResultMessage> validationResults = new ArrayList<>();
     Set<GmlElementError> elementErrors = new HashSet<>();
@@ -68,32 +85,31 @@ public class Lbldg01LogicalAccuracyValidator implements IValidator {
     validateBuildingSolids(buildings, elementErrors);
 
     elementErrors.stream()
-        .collect(Collectors.groupingBy(GmlElementError::getBuildingId))
-        .forEach((buildingId, buildingElementErrors) -> {
-            var invalidPolygonTxt = new ArrayList<String>();
-            var invalidSolidTxt = new ArrayList<String>();
+            .collect(Collectors.groupingBy(GmlElementError::getBuildingId))
+            .forEach((buildingId, buildingElementErrors) -> {
+              var invalidPolygonTxt = new ArrayList<String>();
+              var invalidSolidTxt = new ArrayList<String>();
 
-            buildingElementErrors.forEach(error -> {
-              if (error.getError() == Lbldg01ErrorType.ERR_INVALID_FORMAT_POINTS) {
-                invalidPolygonTxt.add(String.format(MessageError.ERR_LBLDG_01_POLYGON_DETAIL, error.getErrorElementId()));
-              } else if (error.getError() == Lbldg01ErrorType.ERR_SOLID_INTERSECT) {
-                invalidSolidTxt.add(String.format(MessageError.ERR_LBLDG_01_SOLID_DETAIL, error.getErrorElementId()));
+              buildingElementErrors.forEach(error -> {
+                if (error.getError() == Lbldg01ErrorType.ERR_INVALID_FORMAT_POINTS) {
+                  invalidPolygonTxt.add(String.format(MessageError.ERR_LBLDG_01_POLYGON_DETAIL, error.getErrorElementId()));
+                } else if (error.getError() == Lbldg01ErrorType.ERR_SOLID_INTERSECT) {
+                  invalidSolidTxt.add(String.format(MessageError.ERR_LBLDG_01_SOLID_DETAIL, error.getErrorElementId()));
+                }
+              });
+
+              if (!invalidPolygonTxt.isEmpty()) {
+                var polygonsError = String.format(MessageError.ERR_LBLDG_01_POLYGON, String.join("\n", invalidPolygonTxt));
+                var buildingWarningMsg = String.format(MessageError.ERR_LBLDG_01_BUILDING, buildingId, polygonsError);
+                validationResults.add(new ValidationResultMessage(ValidationResultMessageType.Error, buildingWarningMsg, buildingElementErrors));
+              }
+
+              if (!invalidSolidTxt.isEmpty()) {
+                var solidsError = String.format(MessageError.ERR_LBLDG_01_SOLID, String.join("\n", invalidSolidTxt));
+                var buildingWarningMsg = String.format(MessageError.ERR_LBLDG_01_BUILDING, buildingId, solidsError);
+                validationResults.add(new ValidationResultMessage(ValidationResultMessageType.Warning, buildingWarningMsg, buildingElementErrors));
               }
             });
-
-            if (!invalidPolygonTxt.isEmpty()) {
-              var polygonsError = String.format(MessageError.ERR_LBLDG_01_POLYGON, String.join("\n", invalidPolygonTxt));
-              var buildingWarningMsg = String.format(MessageError.ERR_LBLDG_01_BUILDING, buildingId, polygonsError);
-              validationResults.add(new ValidationResultMessage(ValidationResultMessageType.Error, buildingWarningMsg, buildingElementErrors));
-            }
-
-            if (!invalidSolidTxt.isEmpty()) {
-              var solidsError = String.format(MessageError.ERR_LBLDG_01_SOLID, String.join("\n", invalidSolidTxt));
-              var buildingWarningMsg = String.format(MessageError.ERR_LBLDG_01_BUILDING, buildingId, solidsError);
-              validationResults.add(new ValidationResultMessage(ValidationResultMessageType.Warning, buildingWarningMsg, buildingElementErrors));
-            }
-        });
-
 
     return validationResults;
   }
@@ -133,22 +149,33 @@ public class Lbldg01LogicalAccuracyValidator implements IValidator {
   private boolean isSolidIntersect(Node solid1, Node solid2, Set<GmlElementError> elementErrors, String lodSolidType) {
     Geometry projectedOnOxyPlane1;
     try {
-      projectedOnOxyPlane1 = getSolidExteriorProjectedOnOxyPlane(solid1, elementErrors, lodSolidType);
+      projectedOnOxyPlane1 = getProjectedCached(solid1, elementErrors, lodSolidType);
     } catch (IllegalArgumentException | InvalidPosStringException e) {
       return false;
     }
     Geometry projectedOnOxyPlane2;
     try {
-      projectedOnOxyPlane2 = getSolidExteriorProjectedOnOxyPlane(solid2, elementErrors, lodSolidType);
+      projectedOnOxyPlane2 = getProjectedCached(solid2, elementErrors, lodSolidType);
     } catch (IllegalArgumentException | InvalidPosStringException e) {
       return false;
     }
-
+    if (!projectedOnOxyPlane1.getEnvelopeInternal().intersects(projectedOnOxyPlane2.getEnvelopeInternal())) {
+      return false;
+    }
     // Check intersection
     // If intersection is a polygon or multipolygon, then two solids intersect
     // Otherwise, two solids do not intersect (perhaps touch or no touch)
     var intersection = projectedOnOxyPlane1.intersection(projectedOnOxyPlane2);
     return intersection != null && intersection.getArea() > 0;
+  }
+  private static List<Node> elementsByTag(Node root, String tagName) {
+    if (!(root instanceof org.w3c.dom.Element)) {
+      return XmlUtil.findAllNodeByTag(root, tagName);
+    }
+    var nl = ((org.w3c.dom.Element) root).getElementsByTagName(tagName);
+    var out = new ArrayList<Node>(nl.getLength());
+    for (int i = 0; i < nl.getLength(); i++) out.add(nl.item(i));
+    return out;
   }
 
   /**
@@ -164,31 +191,34 @@ public class Lbldg01LogicalAccuracyValidator implements IValidator {
     boolean isError = false;
     List<Geometry> results = new ArrayList<>();
     // Find list of solid's exteriors
-    List<Node> solidExteriors = XmlUtil.findAllNodeByTag(solid, TagName.GML_EXTERIOR);
+    List<Node> solidExteriors = elementsByTag(solid, TagName.GML_EXTERIOR);
     for (Node solidExterior : solidExteriors) {
       List<Node> polygons;
       // Find list of exterior's polygons
       if (lodSolidType.equals(TagName.BLDG_LOD_1_SOLID)) {
-        polygons = XmlUtil.findAllNodeByTag(solidExterior, TagName.GML_POLYGON);
+        polygons = elementsByTag(solidExterior, TagName.GML_POLYGON);
       } else if (lodSolidType.equals(TagName.BLDG_LOD_2_SOLID)) {
         polygons = new ArrayList<>();
         // Find Polygon reference
-        XmlUtil.findAllNodeByTag(solid, TagName.GML_SURFACE_MEMBER).forEach(
-            surfaceMember -> {
-              var referencePolygonId = XmlUtil.getAttribute(surfaceMember, TagName.ATTR_XLINK_HREF).substring(1);
-              XmlUtil.recursiveGetNodeByTagNameAndAttr(rootDocument, polygons, TagName.GML_POLYGON, TagName.GML_ID,
-                  referencePolygonId);
-            });
+        elementsByTag(solid, TagName.GML_SURFACE_MEMBER).forEach(surfaceMember -> {
+          var href = XmlUtil.getAttribute(surfaceMember, TagName.ATTR_XLINK_HREF);
+          if (href == null || href.isBlank() || href.charAt(0) != '#') {
+            return;
+          }
+          var referencePolygonId = href.substring(1);
+          var polygon = polygonById.get(referencePolygonId);
+          if (polygon != null) {
+            polygons.add(polygon);
+          }
+        });
       } else {
         polygons = new ArrayList<>();
       }
 
       for (Node polygon : polygons) {
-        // Find list of polygon's exterior
-        List<Node> exteriors = XmlUtil.findAllNodeByTag(polygon, TagName.GML_EXTERIOR);
+        List<Node> exteriors = elementsByTag(polygon, TagName.GML_EXTERIOR);
         for (Node exterior : exteriors) {
-          // Find list of exterior's linear rings
-          List<Node> linearRings = XmlUtil.findAllNodeByTag(exterior, TagName.GML_LINEARRING);
+          List<Node> linearRings = elementsByTag(exterior, TagName.GML_LINEARRING);
           for (Node linearRing : linearRings) {
             // Project linear ring on Oxy plane (convert z = 0)
             var pointOnOxyPlane = ThreeDUtil.get3dPoints(linearRing).stream()
