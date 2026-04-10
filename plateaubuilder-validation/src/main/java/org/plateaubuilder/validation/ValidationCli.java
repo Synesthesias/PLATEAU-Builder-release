@@ -21,6 +21,8 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Locale;
 import java.util.function.Supplier;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import java.util.regex.Pattern;
 
 import static org.plateaubuilder.validation.constant.StandardID.C01;
@@ -53,6 +55,11 @@ public class ValidationCli {
     public static void main(String[] args) {
         try {
             CliArgs cliArgs = parseArgs(args);
+
+            if (!cliArgs.verbose) {
+                Logger.getLogger("org.plateaubuilder.validation").setLevel(Level.OFF);
+            }
+
             initializeJavaFxHeadless();
 
             Path inputPath = Paths.get(cliArgs.inputPath).toAbsolutePath().normalize();
@@ -61,13 +68,15 @@ public class ValidationCli {
                 return;
             }
 
-            Path datasetRoot = findDatasetRoot(inputPath);
-            if (datasetRoot == null) {
-                fail("Schema file not found while searching upward from input: " + SCHEMA_LANDMARK_PARENT_DIR + "/*/" + SCHEMA_LANDMARK_FILENAME);
-                return;
+            Path logDir = null;
+            if (cliArgs.saveLog) {
+                Path datasetRoot = findDatasetRoot(inputPath);
+                if (datasetRoot == null) {
+                    fail("Schema file not found while searching upward from input: " + SCHEMA_LANDMARK_PARENT_DIR + "/*/" + SCHEMA_LANDMARK_FILENAME);
+                    return;
+                }
+                logDir = datasetRoot.resolve(AppConst.VALIDATION_LOG_DESTINATION_DIRECTORY);
             }
-
-            Path logDir = datasetRoot.resolve(AppConst.VALIDATION_LOG_DESTINATION_DIRECTORY);
 
             World.setActiveInstance(new World(), new Group()); // Non-obvious: ThreeDUtil.distance() relies on World.getActiveInstance()
             var cityModelView = GmlImporter.loadGmlHeadless(inputPath.toString(), cliArgs.epsg);
@@ -114,9 +123,11 @@ public class ValidationCli {
                 }
             }
 
-            Path logFile = writeValidationLog(logDir, inputPath, cliArgs.epsg, errorCount, warningCount, allMessages);
             System.out.println("品質検査が完了しました。(エラー数:" + errorCount + ",警告数:" + warningCount + ")");
-            System.out.println("Log file: " + logFile.toAbsolutePath());
+            if (cliArgs.saveLog) {
+                Path logFile = writeValidationLog(logDir, inputPath, cliArgs.epsg, errorCount, warningCount, allMessages);
+                System.out.println("Log file: " + logFile.toAbsolutePath());
+            }
             System.exit(0);
         } catch (IllegalArgumentException e) {
             fail(e.getMessage());
@@ -137,20 +148,26 @@ public class ValidationCli {
     private static CliArgs parseArgs(String[] args) {
         if (args == null || args.length == 0) {
             throw new IllegalArgumentException(
-                    "Usage: :plateaubuilder-validation:run --args=\"<gml-path> [EPSG:xxxx]\""
+                    "Usage: :plateaubuilder-validation:run --args=\"<gml-path> [EPSG:xxxx] [--verbose|-v] [--save-log]\""
             );
         }
 
         String inputPath = args[0];
         String epsg = "EPSG:6677";
+        boolean verbose = false;
+        boolean saveLog = false;
 
         for (String token : Arrays.asList(args).subList(1, args.length)) {
             if (EPSG_PATTERN.matcher(token).matches()) {
                 epsg = token.toUpperCase(Locale.ROOT);
+            } else if ("--verbose".equalsIgnoreCase(token) || "-v".equalsIgnoreCase(token)) {
+                verbose = true;
+            } else if ("--save-log".equalsIgnoreCase(token)) {
+                saveLog = true;
             }
         }
 
-        return new CliArgs(inputPath, epsg);
+        return new CliArgs(inputPath, epsg, verbose, saveLog);
     }
 
     private static Path findDatasetRoot(Path inputPath) {
@@ -288,10 +305,14 @@ public class ValidationCli {
     private static class CliArgs {
         private final String inputPath;
         private final String epsg;
+        private final boolean verbose;
+        private final boolean saveLog;
 
-        private CliArgs(String inputPath, String epsg) {
+        private CliArgs(String inputPath, String epsg, boolean verbose, boolean saveLog) {
             this.inputPath = inputPath;
             this.epsg = epsg;
+            this.verbose = verbose;
+            this.saveLog = saveLog;
         }
     }
 }

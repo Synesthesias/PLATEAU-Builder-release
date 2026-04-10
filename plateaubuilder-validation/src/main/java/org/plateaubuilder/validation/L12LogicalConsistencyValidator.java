@@ -158,7 +158,6 @@ public class L12LogicalConsistencyValidator implements IValidator {
   private boolean isDistanceValid(List<Point3D> points, double[] plane) {
     for (Point3D point : points) {
       Point3D pointProject = SolveEquationUtil.projectOntoPlane(plane, point);
-      System.out.println(ThreeDUtil.distance(point, pointProject));
         if (ThreeDUtil.distance(point, pointProject) > 0.03) {
             return false;
         }
