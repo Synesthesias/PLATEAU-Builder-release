@@ -49,4 +49,5 @@ dependencies {
 application {
     mainClass = "org.plateaubuilder.validation.ValidationCli"
     mainModule = "plateaubuilder.validation"
+    applicationDefaultJvmArgs = ["-Dprism.order=sw"]
 }
