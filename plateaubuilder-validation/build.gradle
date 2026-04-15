@@ -28,7 +28,9 @@ dependencies {
     implementation 'org.citygml4j.ade:iur-ade-citygml4j:1.4.2'
 
     implementation 'org.apache.commons:commons-lang3:3.12.0'
-    implementation 'java3d:j3d-core-utils:1.3.1'
+    implementation('java3d:j3d-core-utils:1.3.1') {
+        exclude group: 'java3d', module: 'vecmath'
+    }
     implementation 'org.locationtech.jts.io:jts-io-common:1.19.0'
 
     implementation 'com.fasterxml.jackson.core:jackson-databind:2.16.0'
