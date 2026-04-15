@@ -54,13 +54,18 @@ public class ValidationCli {
 
     public static void main(String[] args) {
         try {
+            long t0 = System.currentTimeMillis();
             CliArgs cliArgs = parseArgs(args);
 
             if (!cliArgs.verbose) {
                 Logger.getLogger("org.plateaubuilder.validation").setLevel(Level.OFF);
             }
 
+            timing("args parsed", t0);
+
+            long t1 = System.currentTimeMillis();
             initializeJavaFxHeadless();
+            timing("JavaFX init", t1);
 
             Path inputPath = Paths.get(cliArgs.inputPath).toAbsolutePath().normalize();
             if (!Files.exists(inputPath) || !Files.isRegularFile(inputPath)) {
@@ -78,13 +83,16 @@ public class ValidationCli {
                 logDir = datasetRoot.resolve(AppConst.VALIDATION_LOG_DESTINATION_DIRECTORY);
             }
 
+            long t2 = System.currentTimeMillis();
             World.setActiveInstance(new World(), new Group()); // Non-obvious: ThreeDUtil.distance() relies on World.getActiveInstance()
             var cityModelView = GmlImporter.loadGmlHeadless(inputPath.toString(), cliArgs.epsg);
+            timing("GML load + GDAL init", t2);
             if (cityModelView == null) {
                 fail("Failed to load CityModel from input: " + inputPath);
                 return;
             }
 
+            long t3 = System.currentTimeMillis();
             List<IValidator> validators = loadValidators();
             if (validators.isEmpty()) {
                 System.out.println("No validators selected.");
@@ -101,6 +109,7 @@ public class ValidationCli {
 
             for (IValidator validator : validators) {
                 String validatorName = validator.getClass().getSimpleName();
+                long tv = System.currentTimeMillis();
                 try {
                     List<ValidationResultMessage> messages = validator.validate(cityModelView);
                     for (ValidationResultMessage message : messages) {
@@ -121,9 +130,12 @@ public class ValidationCli {
                     allMessages.add(synthetic);
                     System.err.println(crashMessage);
                 }
+                timing(validatorName, tv);
             }
 
+            timing("all validators", t3);
             System.out.println("品質検査が完了しました。(エラー数:" + errorCount + ",警告数:" + warningCount + ")");
+            timing("total", t0);
             if (cliArgs.saveLog) {
                 Path logFile = writeValidationLog(logDir, inputPath, cliArgs.epsg, errorCount, warningCount, allMessages);
                 System.out.println("Log file: " + logFile.toAbsolutePath());
@@ -295,6 +307,11 @@ public class ValidationCli {
         }
 
         return logPath;
+    }
+
+    private static void timing(String label, long startMs) {
+        long elapsed = System.currentTimeMillis() - startMs;
+        System.out.printf("[TIMING] %s: %.1fs%n", label, elapsed / 1000.0);
     }
 
     private static void fail(String message) {
